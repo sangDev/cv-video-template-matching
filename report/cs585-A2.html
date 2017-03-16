@@ -1,0 +1,530 @@
+
+<html>
+<head>
+<title> CS585 Homework Template: HW A2 Student Name Sang-Joon Lee  </title>
+<style>
+<!--
+body{
+font-family: 'Trebuchet MS', Verdana;
+}
+p{
+font-family: 'Trebuchet MS', Times;
+margin: 10px 10px 15px 20px;
+}
+h3{
+margin: 5px;
+}
+h2{
+margin: 10px;
+}
+h1{
+margin: 10px 0px 0px 20px;
+}
+div.main-body{
+align:center;
+margin: 30px;
+}
+hr{
+margin:20px 0px 20px 0px;
+}
+-->
+</style>
+</head>
+
+<body>
+<center>
+<a href="http://www.bu.edu"><img border="0" src="http://www.cs.bu.edu/fac/betke/images/bu-logo.gif"
+width="119" height="120"></a>
+</center>
+
+<h1>A2: Vision Computing on Live Video</h1>
+<p> 
+ CS 585 HW A2 <br>
+ Sang-Joon Lee <br>
+ Date Sept 24, 2015
+</p>
+
+<div class="main-body">
+
+<! -- 
+
+PART 1 REPORT 
+
+-->
+<hr>
+<h1>PART 1: Template Matching</h1>
+
+<hr>
+<h2> Problem Definition </h2>
+<p>
+The goal of part 1 of this project is to perform object detection and tracking of an object in a live video. 
+The template matching method is used to perform object detection as well as tracking of the object. In this example, 
+an object used is a pen. First, a template image the object, pen, is captured.  
+On every frame, the template matching function call will be performed on the
+stream of image from the video against the template image. The goal of this project is to implement, test, and
+evaluate the template matching method on different size, orientation and change in illumination of the object.
+</p>
+
+<hr>
+
+<h2>Method and Implementation </h2>
+<p>
+The template matching method and implementation can be broken down into following steps: 
+<br>
+<li style="text-indent: 30px;"> Obtain a template image and load the image. </li>
+<li style="text-indent: 30px;"> Read live stream of image from video channel. </li>
+<li style="text-indent: 30px;"> Perform template matching on every image and find location with maximum NCC. </li>
+</p>
+<p>
+The following detail description of method and implementation for each steps. 
+</p>
+
+<h3 style="text-indent: 10px;"> A. Template Image </h3>
+<p>
+In this project, we have decided to track a black pen - as an object to detect and track. 
+The following is the template image of the pen we are going to track.
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen3.jpg">
+</p>
+<p>
+As you observe from the image, the orientation of pen is parallel to the horizon of 
+the camera. This is an important detail that plays role in performance of the template matching algorithm.  
+</p>
+<p>
+The following code is used to read the template image and stores into 't_img':
+</p>
+<p style="text-indent: 5em;">
+	t_img = imread(tempFileName, IMREAD_COLOR);
+</p>
+
+<h3 style="text-indent: 10px;"> B. Reading Live Images from Video Channel </h3>
+<p>
+The following functions were used to open and read an image from a video channel. <br><br>
+First, an OpenCV object VideoCapture was created to open a video channel. In this case, channel 0 was opened:
+</p>
+<p style="text-indent: 5em;">
+	VideoCapture videoCh(0);
+</p>
+<p>
+Second, an OpenCV "read" method from the video object to read a image from video channel. Here the read image is stored
+in Mat object.
+</p>
+<p style="text-indent: 5em;">
+	open0 = videoCh.read(Vframe0);
+</p>
+
+<h3 style="text-indent: 10px;"> C. Template Matching </h3>
+<p>
+The stream of images from video are read in a while-loop and this image is used to perform template matching against
+the template image described above.<br><br>
+The following function call 'tempMatchingOpenCV' which passes two variables to the function, 
+'s_img', the search image and 't_img', the template image:
+</p>
+
+<p style="text-indent: 5em;">
+		void tempMatchingOpenCV(Mat& s_img, Mat& t_img)
+</p>
+
+<h4 style="text-indent: 10px;"> Call matchTemplate </h4>
+<p>
+In this function, first a resulting matrix is created to store the Normalized Correlation Coefficient calculated for 
+each pixel in the search image(s_img) against the template image (t_img).
+<br><br>
+Then the following OpenCV template matching function is called to calculate the NCC of two images:
+</p>
+<p style="text-indent: 5em;">
+	matchTemplate(s_img, t_img, result, match_method);
+</p>
+<p>
+Here, match_method = 5, i.e. Normalized Correlation Coefficient method.
+You can find more information about 'matchTemplate' function on following OpenCV documentation:
+<a href="http://docs.opencv.org/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
+">OpenCV matchTemplate</a>
+</p>
+
+<h4 style="text-indent: 10px;"> Find Max NCC & location </h4>
+<p>
+Once you have the NCC results, the 'minMaxLoc' is used to find the maximum and minimum value in the result and the respective location 
+of the result, as follows: 
+</p>
+
+<p style="text-indent: 5em;">
+	minMaxLoc(result, &minValue, &maxValue, &minLocation, &maxLocation, Mat());
+</p>
+<p>
+You can find more information about 'minMaxLoc' function on following OpenCV documentation:
+<a href="http://docs.opencv.org/modules/core/doc/operations_on_arrays.html?highlight=minmaxloc#minmaxloc
+">OpenCV matchTemplate</a>
+</p>
+
+<p>
+Once we have the location of the Max NCC value, we use the following 'rectangle' method to draw rectangle around the detected object:
+</p>
+<p style="text-indent: 5em;">
+	rectangle(imgDisplay, matchLocation, Point(matchLocation.x + t_img.cols, matchLocation.y + t_img.rows), Scalar::all(0), 2, 8, 0);
+</p>
+<p>
+The following image shows an example of search image and resulting Normalized Correlation Coefficient. 
+</p>
+<p style="text-indent: 5em;">
+<img src="part1Img\result_img.png">
+</p>
+
+
+<hr>
+
+
+<h2>Experiments</h2>
+<p>
+The experiments were
+The following are result of the object, 'pen', and detection and tracking using the template matching method</p>
+</p>
+
+<hr>
+<h2>Results</h2>
+
+<p>
+Detected Images (Normal): <br>
+This image shows the pen being detected by the template matching method<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_detected.png">
+</p>
+
+<p>
+Detected Images (Close Up): <br>
+This image shows the pen located very close to the camera, being detected by the template matching method.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_closeup.png">
+</p>
+
+<p>
+Detected Images (Far Away): <br>
+This image shows the pen located far away from the camera such that the size of the pen is smaller than the 
+template image. Here, we can observe that part of my hand is being detected as part of the object.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_faraway.png">
+</p>
+
+<p>
+Detected Images (Slightly Angled): <br>
+This image shows the pen slighted angled from horizontal plane. Here, we can observe that 
+the object is still being detected by the template matching method. However, with a pen that is more angled, 
+the algorithm has difficulty detecting the object.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_slightangle.png">
+</p>
+
+<p>
+UnDetected Images (Vertical): <br>
+This image shows the pen held vertically from the camera. The method fails to detect the object.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_verticle.png">
+</p>
+
+<p>
+UnDetected Images (Too Far): <br>
+This image shows the pen is too far from the camera. The method fails to detect the object.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\pen_too_faraway.png">
+</p>
+
+<p>
+UnDetected Images (No Pen - False Positive): <br>
+In this image, there is no pen, however a similar object is determined as a pen - in this image, my glasses are shown as 
+that is highly correlated with the pen. They are both black and have similar horizontal features.<br>
+</p>
+<p style="text-indent: 10em;">
+<img src="part1Img\no_pen_glasses.png">
+</p>
+
+
+<hr>
+<h2> Discussion </h2>
+<p> 
+In above experiments, we observed a number of cases which algorithm detected the object correctly, and few different cases
+which incorrectly identified the object.  The cases which detected object correctly had the object in close correlation with 
+the template image, where the orientation of the pen was parallel to the horizon of the camera. 
+
+<li style="text-indent: 3em;"> We can also see that the template matching does not always work correctly. 
+For example, when there were similar featured object in the image, the template matching failed to detect the correct object
+since the normalized correlation was higher. </il>
+</p>
+
+<p>
+Change in Orientation: <br>
+<li style="text-indent: 3em;"> When the orientation of the image is changed from horizontal to a slight change in angle, the template matching method
+fails frequently. </li>
+<li style="text-indent: 3em;"> When the orientation is ideal, true positive is high and false positive is low. </li>
+<li style="text-indent: 3em;"> We can also observe this from the case where the pen is held up vertically. </il>
+<li style="text-indent: 3em;"> Possible Improvements: we can count for the orientation of the object by finding the second order central moment and its eigenvector to get the angle of the 
+object. We can use this information to rotate the template image and perform template matching. 
+<li style="text-indent: 3em;"> Possible Improvements: We can also add other templates with varying orientation to consider different orientation 
+of the object. This may improve the algorithm, however, will not have very high false positive. 
+</li>
+</p>
+
+<p> 
+Change in Size of the Object: <br>
+<li style="text-indent: 3em;"> When the object is very close to the camera, it may not detect the image correctly. </li>
+<li style="text-indent: 3em;"> When the object is far away from the camera, it also may not detect the image correctly. </li>
+<li style="text-indent: 3em;"> Possible Improvements: We can build an image pyramid of the search image to create set of images
+with different resolution and perform template matching to compensate for varying size.</li>
+</p>
+
+<hr>
+<h2> Conclusions </h2>
+<p>
+The template matching algorithm implemented for this project does work moderately well for ideal case where the object is 
+close correlated in terms of size and orientation. However, the template matching algorithm fails frequently when the object
+in the search image has different size or orientation. We observed this from a number of experimental case.  Also, there can be 
+false positive of the object when there are other objects that have similar property to the tracking object - which can cause 
+failures.  
+</p>
+<p>
+The algorithm can be improved by compensating for the orientation of the object, or creating varying orientation of templates. Also, 
+it can be improved by implementing the image pyramid method which compensates the size of the object in the search image. 
+</p>
+
+
+<! -- 
+
+PART 2 REPORT 
+
+-->
+<hr>
+<h1>PART 2: Gesture Recognition</h1>
+
+<hr>
+<h2> Problem Definition </h2>
+<p>
+The goal of part 2 of this project is to design and implement algorithm that delineates hand shapes or gestures in a live video. 
+</p>
+
+<hr>
+
+<h2> Method and Implementation </h2>
+
+<h3 style="text-indent: 10px;"> A. Template Images of Hand Shapes </h3>
+<p>
+For this part, three different hand shapes were used: (1) Palm, (2) Fist, (3) Index Finger. 
+The following are template image used for shape of hands: 
+</p>
+
+<p style="text-indent: 10em;">
+(1) Palm
+<img src="part2Img\palm.jpg">
+(2) Fist
+<img src="part2Img\fist.jpg">
+(3) Index Finger 
+<img src="part2Img\index_finger.jpg">
+</p>
+
+
+<h3 style="text-indent: 10px;"> B. Skin Detection </h3>
+<p>
+Since all our objects are hands (skin), we first perform a skin detection method on the 
+stream on images to detect and isolate skin in the image into a grayscale image. 
+</p>
+<p>
+To do this, we use the skin detection function from the surveys of skin color modeling and detection techniques: 
+Vezhnevets, Vladimir, Vassili Sazonov, and Alla Andreeva. "A survey on pixel-based skin color detection techniques."
+</p>
+
+<p>
+The function call "skinDection" accepts the sources in image 'src', performs skin detection on the image and 
+stores the grayscale result image in 'dst'. The following is function declaration:
+</p>
+
+<p style="text-indent: 10em;">
+void skinDetect(Mat& src, Mat& dst) 
+</p>
+
+<p>
+The implementation of skin detection as follows:
+</p>
+<pre>
+			if ((R > 95 && G > 40 && B > 20) && 
+			(myMax(R, G, B) - myMin(R, G, B) > 15) && 
+			(abs(R - G) > 15) && (R > G) && (R > B))
+			{
+				dst.at<uchar>(i, j) = 255;
+			}
+</pre>			
+
+<p>
+The following is an example of detected skin image:
+</p>
+</p>
+<p style="text-indent: 10em;">
+<img src="part2Img\out_skin_palm.png">
+</p>
+
+
+<h3 style="text-indent: 10px;"> C. Contour </h3>
+<p>
+Once we obtain the grayscale image with detected skin, we use this image to find 
+the contour of the skin detected in the image.  At this point, we can find the 
+largest contour area and make an assumption that this is the object (hand)
+we are looking for.  With this assumption, we can find the largest rectangle around 
+the detected object and treat as a sub-image that we can perform template matching. 
+</p>
+<p style="text-indent: 5em;">
+		findContours(frameDest, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+</p>
+
+<p>
+Documentation for finding contours:
+<a href="http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=findcontours#findcontours
+">OpenCV findcontours</a>
+</p>
+
+<p>
+The following is an example of output of contour:
+</p>
+<p style="text-indent: 10em;">
+<img src="part2Img\out_contour_palm.png">
+</p>
+
+
+<h3 style="text-indent: 10px;"> D. Object Recognition using Template Matching </h3>
+<p>
+Using the template matching technique, we take the each of the template images against the sub-image
+that we produced from the rectangle created by the contour. The maximum of the NCC is 
+determined as the object that has the closest correlation with the template.  
+</p>
+
+<p>
+The following is an example of isolated palm image from live video:
+</p>
+<p style="text-indent: 10em;">
+<img src="part2Img\out_subimg_palm.png">
+</p>
+
+<hr>
+
+<h2>Experiments</h2>
+<p>
+The experiment was performed on total of twenty different cases and the results were shown in confusion table.  
+</p>
+
+<hr>
+<h2> Results</h2>
+
+<p>
+Result for Palm: <br>
+This image shows experimental result for detecting palm hand gesture. As you can see from the resulting output, Palm was correctly 
+detected.<br>
+</p>
+<p>
+<img src="part2Img\detect_palm.png">
+</p>
+
+<p>
+Result for Fist: <br>
+This image shows experimental result for detecting fist hand gesture. As you can see from the resulting output, fist was correctly 
+detected.<br></p>
+<p>
+<img src="part2Img\detect_fist.png">
+</p>
+
+<p>
+Result for Index Finger: <br>
+This image shows experimental result for detecting index finger hand gesture. As you can see from the resulting output, index finger was correctly 
+detected.<br></p>
+<p>
+<img src="part2Img\detect_one.png">
+</p>
+
+<h3> Confusion Table</h3>
+
+<p>
+The following are confusion table for each of normal, close up distance, far distance and 
+total of three cases. For each experiment 15 cases were performed where hypothesis cases
+are presented to the program to see if detection is correct or not.<br></p>
+
+<p>
+<img src="part2Img\ct_normal.png">
+</p>
+
+
+<p>
+<img src="part2Img\ct_closeup.png">
+</p>
+
+<p>
+<img src="part2Img\ct_far.png">
+</p>
+
+<p>
+<img src="part2Img\ct_total.png">
+</p>
+
+<hr>
+<h2> Discussion </h2>
+<p> 
+In this implementation, we can see that the classification of the algorithm works
+the best at close-up distance. As the distance from camera to hand gesture is increased
+the performance decreases. 
+</p>
+<p>
+Overall, we can see that the classification has most difficulty 
+in distinguishing the Palm and Fist when Palm is presented. 
+Also, the algorithm has difficulty in determining "One" index finger cases. 
+
+</p>
+
+<hr>
+<h2> Conclusions </h2>
+<p>
+In general, the algorithm works quite well with the simple hand gestures.  The classification
+of the hands can be much more improved by applying the pyramid image method to 
+adjust for the size of the object in varying resolutions.
+</p>
+
+
+<hr>
+<h2> Information about Graphics </h2>
+<p>
+This is a simple graphics which shows different type of action/activity 
+with respect to the hand gesture.  For example, this can be used as a 
+simple communication tool between a patient or a disabled person who is not
+able to speak properly but able to move and express with hand - without much 
+restrictions.  For example, it can be a simple tool for outdoor activity such as riding 
+a mobile wheel chair.  
+</p>
+<li> Palm  = Walk </li>
+<li> Fist  = Stop </li>
+<li> Index = Run </li>
+
+
+<hr>
+<h2> Credits and Bibliography </h2>
+
+<p>
+Credit: <br>
+<li> work from Lab 1, 2, 3 and 4 of CS585. </li>
+<li> Images are from various source from Google. </li>
+</p>
+
+<p>
+Reference: <br>
+<li> 	Find Contours: 	http://docs.opencv.org/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html?highlight=findcontours#findcontours</li>
+<li>	matchTemplate:	http://docs.opencv.org/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate</li>
+<li> minMaxLoc:	http://docs.opencv.org/modules/core/doc/operations_on_arrays.html?highlight=minmaxloc#minmaxloc</li>
+<li> Image Moments: https://en.wikipedia.org/wiki/Image_moment </li>
+</p>
+
+<hr>
+</div>
+</body>
+
+
+
+</html>
